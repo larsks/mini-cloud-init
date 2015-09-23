@@ -16,7 +16,7 @@ find_device() {
 
 	if [ -z "$dev" ]; then
 		dev=$(
-		lsblk -l -o NAME,LABEL,UUID |
+		lsblk -lp -o NAME,LABEL,UUID |
 		awk -vMATCH=$match -vCOL=$col '$COL == MATCH {print $1}'
 		)
 	fi
