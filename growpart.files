@@ -1,5 +1,5 @@
 /sbin/growpart
-/sbin/lsblk
+/bin/lsblk
 /usr/bin/awk
 /usr/bin/cut
 /usr/bin/expr
