@@ -1,4 +1,5 @@
 /sbin/growpart
+/sbin/sfdisk
 /bin/lsblk
 /usr/bin/awk
 /usr/bin/cut
