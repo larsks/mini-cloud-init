@@ -49,6 +49,8 @@ fi
 # phase.
 echo "NOTICE: Attempting to resize root filesystem." >&2
 root_dev=$(mount | awk '$3 == "/" {print $1}')
+growpart $root_dev
+partprobe
 resize2fs $root_dev
 
 cat <<EOF

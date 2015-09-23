@@ -34,4 +34,4 @@ if [ -z "$device" ]; then
 fi
 
 echo "NOTICE: Attempting to grow $device partition $part." >&2
-echo ',+,' | sfdisk -N$part $device
+echo ',+,' | sfdisk -N$part --force $device
