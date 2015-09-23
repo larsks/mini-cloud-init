@@ -1,7 +1,37 @@
 #!/bin/sh
 
-device=$1
-partition=${2:-1}
+find_device() {
+	devspec="$1"
 
-echo "NOTICE: Attempting to grow $device partition $partition." >&2
-echo ',+,' | sfdisk -N$partition $device
+	case $devspec in
+	LABEL=*)
+		col=2
+		match=$(echo $devspec | cut -f2 -d=)
+		;;
+	UUID=*)	col=3
+		match=$(echo $devspec | cut -f2 -d=)
+		;;
+	/*)	dev=$devspec;;
+	esac
+
+	if [ -z "$dev" ]; then
+		dev=$(
+		lsblk -l -o NAME,LABEL,UUID |
+		awk -vMATCH=$match -vCOL=$col '$COL == MATCH {print $1}'
+		)
+	fi
+
+	echo $dev
+}
+
+devpart=$(find_device $1)
+
+part=$(expr match "$devpart" '.*\([0-9][0-9]*\)$')
+
+device=$(expr match "$devpart" '\(.*[^0-9][0-9][0-9]*\)p[0-9][0-9]*')
+if [ -z "$device" ]; then
+	device=$(expr match "$devpart" '\(.*[^0-9]\)[0-9][0-9]*')
+fi
+
+echo "NOTICE: Attempting to grow $device partition $part." >&2
+echo ',+,' | sfdisk -N$part $device
