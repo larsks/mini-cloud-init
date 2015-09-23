@@ -1,0 +1,63 @@
+#!/bin/sh
+
+MDURL=http://169.254.169.254/latest/meta-data
+CIDIR=/var/lib/cloud
+
+install -d -m 755 $CIDIR/lock
+
+if ! curl -sf -o /etc/instance-id $MDURL/instance-id; then
+	echo "ERROR: metadata service is not available." >&2
+	exit 1
+fi
+
+instance_id=$(cat /etc/instance-id)
+if [ -f $CIDIR/lock/$instance_id ]; then
+	echo "WARN: cloud-init has already configured this system ($instance_id)." >&2
+	exit 0
+fi
+
+touch $CIDIR/lock/$instance_id
+
+# This removes any existing ssh host keys. They will be
+# regenerated when the 'sshd' service starts up.
+echo "NOTICE: Purging existing SSH host keys." >&2
+rm -f /etc/ssh/ssh_host*
+
+sshtmp=$(mktemp)
+trap "rm -f $sshtmp" EXIT
+install -d -m 700 -o root -g root /root/.ssh
+curl -sf $MDURL/public-keys/0/openssh-key > $sshtmp
+if grep -q '^ssh-' $sshtmp; then
+	if ! grep -q -f $sshtmp /root/.ssh/authorized_keys; then
+		echo "NOTICE: Installing ssh key for root." >&2
+		install -m 600 -o root -g root $sshtmp \
+			/root/.ssh/authorized_keys
+	else
+		echo "NOTICE: Ignoring duplicate ssh key for root." >&2
+	fi
+fi
+
+hostname=$(curl -sf $MDURL/hostname)
+if [ -n "$hostname" ]; then
+	echo "NOTICE: Setting hostname to \"$hostname\"."
+	hostname $hostname
+fi
+
+# This will attempt to grow the root filesystem, but this will only
+# work if something was able to expand the root *partition* before
+# it was mounted.  This requires running code during the initramfs
+# phase.
+echo "NOTICE: Attempting to resize root filesystem." >&2
+root_dev=$(mount | awk '$3 == "/" {print $1}')
+resize2fs $root_Dev
+
+cat <<EOF
+======================================================================
+
+$(ip addr show eth0)
+
+$(ip route)
+======================================================================
+
+EOF
+

@@ -1,0 +1,12 @@
+#!/sbin/openrc-run
+
+name="cloud-init"
+command="/bin/cloud-init"
+
+depend() {
+	before sshd
+	need localmount
+	need logger
+	need networking
+}
+

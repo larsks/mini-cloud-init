@@ -1,0 +1,7 @@
+#!/bin/sh
+
+device=$1
+partition=${2:-1}
+
+echo "NOTICE: Attempting to grow $device partition $partition." >&2
+echo ',+,' | sfdisk -N$partition $device
