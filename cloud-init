@@ -49,7 +49,7 @@ fi
 # phase.
 echo "NOTICE: Attempting to resize root filesystem." >&2
 root_dev=$(mount | awk '$3 == "/" {print $1}')
-resize2fs $root_Dev
+resize2fs $root_dev
 
 cat <<EOF
 ======================================================================
